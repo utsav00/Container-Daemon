@@ -1,0 +1,6 @@
+/build/
+/dist/
+/linux.egg-info*
+
+test.py
+
