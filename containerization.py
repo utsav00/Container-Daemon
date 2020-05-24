@@ -34,12 +34,13 @@ def create_container_root():
 
     return target_path
 
+BASE_DIR_CGROUP = 'sys/fs/cgroup'
 
-def _set_cgroup(cid):
-    base_dir = "/sys/fs/cgroup/cpu"
-    container_dir = os.path.join(base_dir, 'docker_clone', cid)
+def _set_cgroup_cpu(cid):
+    base_dir_cpu = os.path.join(BASE_DIR_CGROUP, cpu)
+    container_dir = os.path.join(base_dir_cpu, 'docker_clone', cid)
 
-    # Put the container to the newly created cgroup
+    # Put the container to the newly created cpu cgroup
     if not os.path.exists(container_dir):
         os.makedirs(container_dir)
     
@@ -49,6 +50,33 @@ def _set_cgroup(cid):
     #set cpu_shares
     file = os.path.join(container_dir, 'cpu.shares')
     open(file, 'w').write(str('cpu_shares'))
+
+
+def _set_cgroup_memory(cid):
+    base_dir_mem = os.path.join(BASE_DIR_CGROUP, 'memory')
+    container_dir = os.path.join(base_dir_mem, 'docker_clone', cid)
+
+    # Put the container to the newly created memory cgroup
+    if not os.path.exists(container_dir):
+        os.makedirs(container_dir)
+
+    task_file = os.path.join(container_dir, 'tasks')
+    open(task_file, 'w').write(str(os.getpid()))
+
+    # Ask for memory
+    memory = read("Insert memory limit in bytes (k, m, g)")
+
+    if memory != 0:
+        mem_limit_file = os.path.join(container_dir, 'memory.limit')
+        open(mem_limit_file, 'w').write(str(memory))
+
+    print("Insert memory swap limit in bytes (k, m, g)")
+    print("(Memory plus swap)")
+    memory_swap = read()
+
+    if memory != 0:
+        memswap_limit_file = os.path.join(container_dir, 'memoryswap.limit')
+        open(memswap_limit_file, 'w').write(str(memory_swap))
 
 
 # Mount private the root mount and do it recursively to avaoid umounting imp stuff like /dev/pts
@@ -77,6 +105,7 @@ def _makedev(dev_path):
 
 def contain(cmd, cid):
     _set_cgroup(cid)
+    _set_cgroup_memory(cid)
 
     # linux.unshare(linux.CLONE_NEWNS)  # create a new mount namespace
     # linux.unshare(linux.CLONE_NEWUTS) # create a new uts namespace
