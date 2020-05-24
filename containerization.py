@@ -4,6 +4,7 @@ import traceback
 import linux
 import stat
 import tarfile
+import uuid
 from pathlib import Path
 
 
@@ -60,8 +61,13 @@ def makedev(dev_path):
         os.mknod(os.path.join(dev_path, device), 0o666 | dev_type, os.makedev(major, minor))
 
 
-def contain(cmd):
-    linux.unshare(linux.CLONE_NEWNS)  # create a new mount namespace
+def contain(cmd, cid):
+    # linux.unshare(linux.CLONE_NEWNS)  # create a new mount namespace
+    # linux.unshare(linux.CLONE_NEWUTS) # create a new uts namespace
+
+    # linux.sethostname(cid)
+
+    ### Use Linux.clone in run() before fork and uncomment the above lines
 
     linux.mount(None, '/', None, linux.MS_REC | linux.MS_PRIVATE, None)
 
@@ -77,16 +83,7 @@ def contain(cmd):
     linux.mount('sysfs', os.path.join(new_root, 'sys'), 'sysfs', 0, '')
     linux.mount('tmpfs', os.path.join(new_root, 'dev'), 'tmpfs', linux.MS_STRICTATIME | linux.MS_NOSUID, 'mode=755')
 
-
-    ## copyright fewbytes
-    # devpts_path = os.path.join(new_root, 'dev', 'pts')
-    # if not os.path.exists(devpts_path):
-    #     os.makedirs(devpts_path)
-    #     linux.mount('devpts', devpts_path, 'devpts', 0, '')
-    
-    # makedev(os.path.join(new_root, 'dev'))
-
-    #Add Devices
+    #Add Basic Devices
     devs = os.path.join(new_root, 'dev', 'pts')
     if os.path.exists:
         pass
@@ -99,17 +96,23 @@ def contain(cmd):
     os.chroot(new_root)
     os.chdir("/")
 
-    # linux.umount2()
-
     os.execvp(cmd[0], cmd)
 
 
 def run(cmd):
+    cid = str(uuid.uuid4())
+
+    linux.unshare(linux.CLONE_NEWNS)  # create a new mount namespace
+    linux.unshare(linux.CLONE_NEWUTS) # create a new uts namespace
+    linux.unshare(linux.CLONE_NEWNET) # create a new n/w namespace
+
+    linux.sethostname(cid)
+
     pid = os.fork()
 
     if pid == 0:
         try:
-            contain(cmd)
+            contain(cmd, cid)
         except Exception:
             traceback.print_exc()
             os._exit(1)
