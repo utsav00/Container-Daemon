@@ -37,7 +37,7 @@ def create_container_root():
 BASE_DIR_CGROUP = 'sys/fs/cgroup'
 
 def _set_cgroup_cpu(cid):
-    base_dir_cpu = os.path.join(BASE_DIR_CGROUP, cpu)
+    base_dir_cpu = os.path.join(BASE_DIR_CGROUP, 'cpu')
     container_dir = os.path.join(base_dir_cpu, 'docker_clone', cid)
 
     # Put the container to the newly created cpu cgroup
@@ -64,7 +64,7 @@ def _set_cgroup_memory(cid):
     open(task_file, 'w').write(str(os.getpid()))
 
     # Ask for memory
-    memory = read("Insert memory limit in bytes (k, m, g)")
+    memory = input("Insert memory limit in bytes (k, m, g)")
 
     if memory != 0:
         mem_limit_file = os.path.join(container_dir, 'memory.limit')
@@ -72,7 +72,7 @@ def _set_cgroup_memory(cid):
 
     print("Insert memory swap limit in bytes (k, m, g)")
     print("(Memory plus swap)")
-    memory_swap = read()
+    memory_swap = input()
 
     if memory != 0:
         memswap_limit_file = os.path.join(container_dir, 'memoryswap.limit')
@@ -104,7 +104,7 @@ def _makedev(dev_path):
 
 
 def contain(cmd, cid):
-    _set_cgroup(cid)
+    _set_cgroup_cpu(cid)
     _set_cgroup_memory(cid)
 
     # linux.unshare(linux.CLONE_NEWNS)  # create a new mount namespace
