@@ -25,9 +25,7 @@ def create_container_root():
 
     target_path = "/home/utsav/Projects/images/Ubuntu"
     
-    if os.path.isdir(target_path):
-        pass
-    else:
+    if not os.path.isdir(target_path):
         os.mkdir(target_path)
 
     tar = tarfile.open(file)
@@ -37,8 +35,24 @@ def create_container_root():
     return target_path
 
 
+def _set_cgroup(cid):
+    base_dir = "/sys/fs/cgroup/cpu"
+    container_dir = os.path.join(base_dir, 'docker_clone', cid)
+
+    # Put the container to the newly created cgroup
+    if not os.path.exists(container_dir):
+        os.makedirs(container_dir)
+    
+    task_file = os.path.join(container_dir, 'tasks')
+    open(task_file, 'w').write(str(os.getpid()))
+
+    #set cpu_shares
+    file = os.path.join(container_dir, 'cpu.shares')
+    open(file, 'w').write(str('cpu_shares'))
+
+
 # Mount private the root mount and do it recursively to avaoid umounting imp stuff like /dev/pts
-def makedev(dev_path):
+def _makedev(dev_path):
     
     pid = os.getpid() # Another way to add symlink prolly
 
@@ -62,8 +76,11 @@ def makedev(dev_path):
 
 
 def contain(cmd, cid):
+    _set_cgroup(cid)
+
     # linux.unshare(linux.CLONE_NEWNS)  # create a new mount namespace
     # linux.unshare(linux.CLONE_NEWUTS) # create a new uts namespace
+    # linux.unshare(linux.CLONE_NEWNET)
 
     # linux.sethostname(cid)
 
@@ -91,7 +108,7 @@ def contain(cmd, cid):
         os.makedirs(devs)
         linux.mount('devpts', devs, 'devpts', 0, '')
     
-    makedev(os.path.join(new_root, 'dev'))
+    _makedev(os.path.join(new_root, 'dev'))
 
     os.chroot(new_root)
     os.chdir("/")
