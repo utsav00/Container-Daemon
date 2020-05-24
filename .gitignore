@@ -1,6 +1,7 @@
+# Files generated from building linux module
 /build/
 /dist/
 /linux.egg-info*
 
+# File to test methods individually before adding them into the coding
 test.py
-
