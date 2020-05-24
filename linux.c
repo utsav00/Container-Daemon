@@ -1,3 +1,5 @@
+/// Author: https://github.com/Fewbytes/rubber-docker/linux.c
+
 #define _GNU_SOURCE
 #include <Python.h>
 #include <sys/syscall.h>

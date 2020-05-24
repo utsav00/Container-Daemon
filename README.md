@@ -14,3 +14,11 @@ A try a implementing containerization technology from scratch to understand it i
 
     Note: Include the path of the command you want to run
     For eg. /bin/ls instead of ls
+
+<br>
+
+### Remaining  
+* Overlay File System
+* Set UID and GID
+* Allow non-root users
+* Add Command line interface such as click
