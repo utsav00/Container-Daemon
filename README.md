@@ -12,7 +12,7 @@ A try a implementing containerization technology from scratch to understand it i
 
     > sudo python containerization.py run [command] [arguments]
 
-    Note: Include the path of the command you want to run
+    Note: Include the path of the command you want to run  
     For eg. /bin/ls instead of ls
 
 <br>
